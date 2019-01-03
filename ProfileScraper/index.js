@@ -42,8 +42,8 @@ function handleUser(user, callback) {
 	osmosis
 		.get('http://sharepoint.stackexchange.com/users/' + user.user_id)
 		.set({
-			'impact': '.stat.people-helped span.number',
-			'title': '.user-card-name'
+			'impact': '#user-card .grid--cell.fl1 .grid--cell.fl-shrink0.pr24 .fc-medium.mb16 .grid--cell:nth-child(3) .grid--cell:nth-child(1)',
+			'title': '#user-card .grid--cell.fl1 .profile-user--about .grid--cell h2 .grid--cell:nth-child(1)'
 		})
 		.data(function (data) {
 			if (!data.impact) {

@@ -15,10 +15,11 @@ namespace StackAnalyzer
     class Program
     {
         private static readonly string FilterQuestions = ConfigurationManager.AppSettings["FilterQuestions"];
-        private static ILogger _logger = LogManager.GetCurrentClassLogger();
+        private static readonly string MapsAPIKey = ConfigurationManager.AppSettings["GoogleGeoAPIKey"];
+		private static ILogger _logger = LogManager.GetCurrentClassLogger();
         private static string LocationsFile = "sp_users_locations.json";
         private static string QueryOverLimitFile = "query_over_limit.json";
-        private static int MapsAPISleepInterval = 400;
+        private static int MapsAPISleepInterval = 100;
 
 
         static void Main()
@@ -76,7 +77,7 @@ namespace StackAnalyzer
                         continue;
                     }
 
-                    var client = new RestClient("http://maps.google.com/maps/api/geocode/json");
+                    var client = new RestClient("https://maps.googleapis.com/maps/api/geocode/json");
 
                     //var proxyUri = "http://150.95.190.102";
                     //client.Proxy = new WebProxy(new Uri(proxyUri), false);
@@ -87,8 +88,9 @@ namespace StackAnalyzer
                         Timeout = 100 * 1000
                     };
                     geoRequest.AddQueryParameter("address", locationString);
+                    geoRequest.AddQueryParameter("key", MapsAPIKey);
 
-                    var geoResult = client.Execute<dynamic>(geoRequest).Data;
+					var geoResult = client.Execute<dynamic>(geoRequest).Data;
 
                     if (geoResult["status"] != "OK")
                     {
