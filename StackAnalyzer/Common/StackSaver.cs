@@ -95,7 +95,7 @@ namespace StackAnalyzer.Common
 			pageParam.Value = page;
 			pageSizeParam.Value = pageSize;
 
-			_logger.Info($"Runing request: {_client.BuildUri(request)}");
+			_logger.Info($"Running request: {_client.BuildUri(request)}");
 			_logger.Info($"Page: {page}");
 
 			Thread.Sleep(200); //prevent throttling from stack exchange when too many requests per second
@@ -143,7 +143,7 @@ namespace StackAnalyzer.Common
 
 			if (merge && !File.Exists(filename))
 			{
-				_logger.Info($"Unable to find file with name '${filename}' for merging");
+				_logger.Info($"Unable to find file with name '{filename}' for merging");
 			}
 
 			File.WriteAllText(filename, JsonConvert.SerializeObject(items));

@@ -24,15 +24,47 @@ namespace StackAnalyzer
 
         static void Main()
         {
-            //LoadUsers();
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Ssl3;
 
-            //LoadAnswers();
+            //LoadUsers("sharepoint");
 
-            //LoadQuestions();
+            //LoadAnswers("sharepoint");
 
-            //LoadTags();
+            //LoadQuestions("sharepoint");
 
-            PopulateUsersLocation();
+            //LoadTags("sharepoint");
+
+            HandleSOSpecialCase();
+
+            //PopulateUsersLocation();
+        }
+
+        private static void HandleSOSpecialCase()
+        {
+            if (File.Exists("so_questions.json"))
+            {
+                //File.Delete("so_questions.json");
+            }
+
+            //LoadSOQuestions("stackoverflow", new Parameter { Name = "tagged", Value = "microsoft-graph-api" });
+            //LoadSOQuestions("stackoverflow", new Parameter { Name = "tagged", Value = "microsoft-teams" });
+
+            var questions = JsonConvert.DeserializeObject<List<dynamic>>(File.ReadAllText("so_questions.json"));
+            var distinctQuestions = questions.GroupBy(q => q["question_id"]).Select(g => g.First()).ToList();
+            File.WriteAllText("so_questions.json", JsonConvert.SerializeObject(distinctQuestions));
+
+            var answers = new List<dynamic>();
+            foreach (var question in distinctQuestions)
+            {
+                var questionAnswers = question["answers"];
+                if(questionAnswers == null)
+                {
+                    continue;
+                }
+                answers.AddRange(questionAnswers);
+            }
+
+            File.WriteAllText("so_answers.json", JsonConvert.SerializeObject(answers));
         }
 
         private static void PopulateUsersLocation(int skip = 0)
@@ -190,7 +222,7 @@ namespace StackAnalyzer
             File.WriteAllText(QueryOverLimitFile, JsonConvert.SerializeObject(queryOverLimit));
         }
 
-        private static void LoadTags()
+        private static void LoadTags(string source, params Parameter[] additionalParams)
         {
             var tagsParameters = new List<Parameter>
             {
@@ -201,11 +233,16 @@ namespace StackAnalyzer
                 }
             };
 
-            var tagsLoader = new StackSaver("tags", "sharepoint", tagsParameters);
+            foreach (var param in additionalParams)
+            {
+                tagsParameters.Add(param);
+            }
+
+            var tagsLoader = new StackSaver("tags", source, tagsParameters);
             tagsLoader.LoadAndSaveData("sp_tags.json");
         }
 
-        private static void LoadQuestions()
+        private static void LoadQuestions(string source, params Parameter[] additionalParams)
         {
             var questionsParams = new List<Parameter>
             {
@@ -226,11 +263,16 @@ namespace StackAnalyzer
                 }
             };
 
-            var questionsLoader = new StackSaver("questions", "sharepoint", questionsParams);
+            foreach (var param in additionalParams)
+            {
+                questionsParams.Add(param);
+            }
+
+            var questionsLoader = new StackSaver("questions", source, questionsParams);
             questionsLoader.LoadAndSaveData("sp_questions.json");
         }
 
-        private static void LoadAnswers()
+        private static void LoadSOQuestions(string source, params Parameter[] additionalParams)
         {
             var questionsParams = new List<Parameter>
             {
@@ -251,11 +293,46 @@ namespace StackAnalyzer
                 }
             };
 
-            var questionsLoader = new StackSaver("answers", "sharepoint", questionsParams);
+            foreach (var param in additionalParams)
+            {
+                questionsParams.Add(param);
+            }
+
+            var questionsLoader = new StackSaver("questions", source, questionsParams);
+            questionsLoader.LoadAndSaveData("so_questions.json", 1, true);
+        }
+
+        private static void LoadAnswers(string source, params Parameter[] additionalParams)
+        {
+            var questionsParams = new List<Parameter>
+            {
+                new Parameter
+                {
+                    Name = "order",
+                    Value = "desc"
+                },
+                new Parameter
+                {
+                    Name = "sort",
+                    Value = "creation"
+                },
+                new Parameter
+                {
+                    Name = "filter",
+                    Value = FilterQuestions
+                }
+            };
+
+            foreach (var param in additionalParams)
+            {
+                questionsParams.Add(param);
+            }
+
+            var questionsLoader = new StackSaver("answers", source, questionsParams);
             questionsLoader.LoadAndSaveData("sp_answers.json");
         }
 
-        private static void LoadUsers()
+        private static void LoadUsers(string source, params Parameter[] additionalParams)
         {
             var usersParams = new List<Parameter>
             {
@@ -276,7 +353,12 @@ namespace StackAnalyzer
                 }
             };
 
-            var questionsLoader = new StackSaver("users", "sharepoint", usersParams);
+            foreach (var param in additionalParams)
+            {
+                usersParams.Add(param);
+            }
+
+            var questionsLoader = new StackSaver("users", source, usersParams);
             questionsLoader.LoadAndSaveData("sp_users.json");
         }
     }
